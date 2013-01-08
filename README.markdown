@@ -49,6 +49,15 @@ As time passes, the timestamps will automatically update.
 
 **For different language configurations**: visit the [`locales`](https://github.com/rmm5t/jquery-timeago/tree/master/locales) directory.
 
+## Options
+
+If your timestamps are already in UTC time, set the ['compareToUTC'] option to true before you attach timeago, like so:
+
+```js
+$.timeago.settings.compareToUTC = true;
+$("abbr.timeago").timeago();
+```
+
 ## Author
 
 [Ryan McGeary](http://ryan.mcgeary.org) ([@rmm5t](http://twitter.com/rmm5t))
