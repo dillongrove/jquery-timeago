@@ -30,7 +30,8 @@
   $.extend($.timeago, {
     settings: {
       refreshMillis: 60000,
-      allowFuture: false,
+      allowFuture: true,
+      compareToUTC: false,
       strings: {
         prefixAgo: null,
         prefixFromNow: null,
@@ -86,8 +87,7 @@
         years < 1.5 && substitute($l.year, 1) ||
         substitute($l.years, Math.round(years));
 
-      var separator = $l.wordSeparator || "";
-      if ($l.wordSeparator === undefined) { separator = " "; }
+      var separator = $l.wordSeparator === undefined ?  " " : $l.wordSeparator;
       return $.trim([prefix, words, suffix].join(separator));
     },
     parse: function(iso8601) {
@@ -143,8 +143,46 @@
     return $t.inWords(distance(date));
   }
 
+  /* This function modified by AutoRef, do not update! */
   function distance(date) {
-    return (new Date().getTime() - date.getTime());
+    if($t.settings.compareToUTC){
+
+      /* The date passed in comes to us in the client's timezone because it was created using the 
+       * javascript new Date() constructor when it was parsed from the DOM.  Unforunately, the date 
+       * in the DOM is from the server, and already in UTC.  We can account for this discrepancy by 
+       * subtracting the client's timezone offset, as is done in getEpochToDateMillis()
+       */
+
+      var epochToNowMillis = getEpochToNowMillis();
+      var epochToDateMillis = getEpochToDateMillis(date);
+
+      return (epochToNowMillis - epochToDateMillis); // finally, find the difference
+
+    } else {
+      return (new Date().getTime() - date.getTime());
+    }
+  }
+
+  function getEpochToNowMillis() {
+    var UTCDateString = new Date().toUTCString(); // get current UTC Time in string form
+    var epochToNowMillis = Date.parse(UTCDateString); // convert it to milliseconds
+    return epochToNowMillis;
+  }
+
+  function getEpochToDateMillis(date) {
+    // convert passed in date to milliseconds from epoch (still wrong timezone)
+    var dateMillis = date.getTime(); 
+
+    // get the number of minutes this timezone differs from UTC time
+    var minutesOff = date.getTimezoneOffset();
+
+    // convert from minutes to milliseconds
+    var millisOff = minutesOff*60*1000;
+
+    // subtract the discrepancy from the date milliseconds
+    var epochToDateMillis = dateMillis - millisOff;
+
+    return epochToDateMillis;
   }
 
   // fix for IE6 suckage
